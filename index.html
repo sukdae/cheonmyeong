@@ -1,0 +1,787 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>천명</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@700;800&family=Gowun+Batang:wght@400;700&family=Noto+Serif+TC:wght@500;700&display=swap">
+<style>
+/* 레이아웃: 한 줄기 두루마리 — 상단 수치, 가운데 장면, 아래 선택지. 당삼채(唐三彩) 유약색을 단일 어두운 화면에 */
+:root {
+  --bg: #0f201d;        /* 짙은 청자 그늘 */
+  --panel: #162e29;
+  --line: #2c4a42;
+  --paper: #ece2cb;     /* 마지(麻紙) 글자색 */
+  --dim: #a9b5a6;
+  --amber: #d49b3c;     /* 삼채 황유 */
+  --green: #86b273;     /* 삼채 녹유 */
+  --cinnabar: #cf5b3f;  /* 주사 */
+  --f-display: "Nanum Myeongjo", "AppleMyungjo", serif;
+  --f-body: "Gowun Batang", "AppleMyungjo", serif;
+  --f-han: "Noto Serif TC", "Songti TC", serif;
+  color-scheme: dark;
+}
+html, body { height: 100%; }
+body {
+  background: var(--bg); color: var(--paper); font-family: var(--f-body); font-size: 16px; line-height: 1.75;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 20px 40px;
+  background-image: radial-gradient(ellipse at 50% -10%, #1d3b34 0%, transparent 60%);
+}
+.wrap { max-width: 760px; margin: 0 auto; display: grid; gap: 18px; }
+header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.logo { font-family: var(--f-display); font-weight: 800; font-size: 1.55rem; letter-spacing: .02em; margin: 0; }
+.logo span { font-family: var(--f-han); color: var(--amber); font-weight: 700; margin-right: .3em; }
+.tools { display: flex; gap: 8px; }
+button { font: inherit; cursor: pointer; }
+.ghost { background: none; border: 1px solid var(--line); color: var(--dim); border-radius: 4px; padding: 3px 10px; font-size: .82rem; }
+.ghost:hover { color: var(--paper); border-color: var(--dim); }
+button:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+
+.hud { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.stat { display: grid; gap: 4px; }
+.stat .lab { display: flex; justify-content: space-between; font-size: .78rem; color: var(--dim); letter-spacing: .04em; }
+.stat .lab b { color: var(--paper); font-variant-numeric: tabular-nums; font-weight: 700; }
+.bar { height: 6px; background: var(--panel); border-radius: 3px; overflow: hidden; }
+.bar i { display: block; height: 100%; width: 50%; transition: width .5s ease; }
+.s-hp i { background: var(--cinnabar); } .s-gold i { background: var(--amber); } .s-army i { background: var(--green); } .s-fame i { background: var(--paper); }
+.eyebrow.ev { color: var(--cinnabar); }
+.choice:disabled { opacity: .45; cursor: not-allowed; border-color: var(--line); background: transparent; }
+.delta { font-size: .72rem; margin-left: 4px; }
+.changes { display: flex; flex-wrap: wrap; gap: 6px 12px; border-top: 1px dashed var(--line); padding-top: 8px; }
+.changes .delta { margin: 0; font-size: .85rem; }
+.text.mono p { font-size: 1.04rem; line-height: 1.95; color: #f3ead6; }
+.text.mono p:last-child { color: var(--amber); font-family: var(--f-display); font-weight: 700; }
+.choice .cost { display: flex; flex-wrap: wrap; gap: 2px 10px; margin-top: 5px; }
+.choice .cost .delta { margin: 0; font-size: .76rem; }
+.choice.next .cost { justify-content: center; }
+.delta.fate { color: var(--amber); }
+.delta.up { color: var(--green); } .delta.down { color: var(--cinnabar); }
+
+.scene { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.scene .inner { padding: 22px 22px 18px; display: grid; gap: 12px; }
+.art { position: relative; aspect-ratio: 16 / 9; max-width: 100%; background: var(--bg); }
+.art img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.art::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to bottom, transparent 55%, var(--panel) 100%); }
+.eyebrow { display: flex; gap: 10px; flex-wrap: wrap; font-size: .8rem; color: var(--amber); letter-spacing: .08em; }
+.eyebrow .ref { color: var(--dim); letter-spacing: 0; }
+.scene h2 { font-family: var(--f-display); font-weight: 800; font-size: 1.3rem; margin: 0; text-wrap: balance; }
+.text p { margin: 0 0 .7em; }
+.text p:last-child { margin-bottom: 0; }
+.say { border-left: 2px solid var(--amber); padding-left: 12px; }
+.say .who { display: block; font-size: .8rem; color: var(--amber); font-weight: 700; }
+.note { font-size: .86rem; color: var(--dim); }
+details.src { border-top: 1px dashed var(--line); padding-top: 8px; }
+details.src summary { cursor: pointer; font-size: .82rem; color: var(--dim); }
+details.src .han { font-family: var(--f-han); font-size: 1.05rem; line-height: 1.9; margin: 6px 0 2px; color: var(--paper); }
+details.src .pg { font-size: .76rem; color: var(--dim); }
+
+.choices { display: grid; gap: 10px; }
+.choice { text-align: left; background: transparent; color: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 12px 14px; line-height: 1.55; transition: border-color .15s, background .15s; }
+.choice:hover { border-color: var(--amber); background: rgba(212,155,60,.06); }
+.choice small { display: block; color: var(--dim); font-size: .78rem; margin-top: 2px; }
+.choice.next { text-align: center; color: var(--amber); }
+
+.ending { border-color: var(--amber); }
+.ending .kind { font-size: .78rem; padding: 1px 8px; border-radius: 3px; border: 1px solid currentColor; width: fit-content; }
+.kind.hist { color: var(--amber); } .kind.if { color: var(--green); } .kind.dead { color: var(--cinnabar); }
+.fact { background: rgba(0,0,0,.18); border-radius: 4px; padding: 10px 12px; font-size: .9rem; }
+.fact b { color: var(--amber); }
+
+.book { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.book div { border: 1px solid var(--line); border-radius: 4px; padding: 8px 10px; font-size: .85rem; }
+.book .got { border-color: var(--amber); }
+.book .no { color: var(--dim); }
+footer { font-size: .76rem; color: var(--dim); text-align: center; }
+@media (max-width: 480px) {
+  .scene .inner { padding: 16px 16px 16px; }
+  .hud { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 14px; }
+  .stat .lab { font-size: .72rem; }
+  .book { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) { .bar i { transition: none; } .scene { animation: none !important; } }
+.scene { animation: rise .35s ease both; }
+/* 인트로 화면 */
+.cover .art { aspect-ratio: 4 / 3; }
+.cover .art::after { background: linear-gradient(to bottom, rgba(15,32,29,.15) 30%, var(--panel) 100%); }
+.cover .mast { position: absolute; left: 0; right: 0; bottom: 14px; z-index: 1; text-align: center; padding: 0 16px; }
+.cover .mast .han { font-family: var(--f-han); font-weight: 700; color: var(--amber); font-size: clamp(2.6rem, 11vw, 4.2rem); letter-spacing: .18em; line-height: 1.1; text-shadow: 0 2px 18px rgba(0,0,0,.6); }
+.cover .mast .ko { font-family: var(--f-display); font-weight: 800; font-size: 1.15rem; letter-spacing: .3em; text-shadow: 0 1px 10px rgba(0,0,0,.7); }
+.cover .lede { font-size: 1.02rem; }
+.cast { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.cast div { border: 1px solid var(--line); border-radius: 4px; padding: 8px 10px; font-size: .86rem; line-height: 1.5; }
+.cast b { display: block; font-family: var(--f-display); color: var(--amber); }
+.how { margin: 0; padding-left: 1.1em; font-size: .9rem; color: var(--dim); }
+.how li { margin-bottom: .3em; } .how b { color: var(--paper); }
+.cover h3 { font-family: var(--f-display); font-size: .95rem; margin: 4px 0 0; color: var(--amber); letter-spacing: .1em; }
+.choice.start { text-align: center; font-family: var(--f-display); font-weight: 800; font-size: 1.1rem; color: var(--bg); background: var(--amber); border-color: var(--amber); }
+.choice.start:hover { background: #e2ad52; }
+@media (max-width: 480px) { .cast { grid-template-columns: 1fr; } }
+@keyframes rise { from { transform: translateY(6px); opacity: .4; } to { transform: none; opacity: 1; } }
+
+/* ---------- 미연시 화면 ---------- */
+.vn { position: relative; height: clamp(520px, 76vh, 660px); border-radius: 6px; overflow: hidden; border: 1px solid var(--line); background: #050a09; cursor: pointer; user-select: none; -webkit-user-select: none; animation: rise .35s ease both; }
+.vn .bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: brightness(.72) saturate(.9); }
+.vn::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(to bottom, rgba(0,0,0,.45) 0%, transparent 18%, transparent 55%, rgba(0,0,0,.55) 100%); }
+.sprites { position: absolute; inset: 0; pointer-events: none; z-index: 1; }
+.sprite { position: absolute; bottom: 0; left: 50%; height: 90%; aspect-ratio: 1 / 1; transform: translateX(-50%); filter: drop-shadow(0 6px 22px rgba(0,0,0,.65)); animation: appear .45s ease both; }
+.sprite.l { left: 30%; } .sprite.r { left: 70%; }
+@keyframes appear { from { opacity: 0; transform: translateX(-50%) translateY(10px); } to { opacity: 1; transform: translateX(-50%); } }
+.place { position: absolute; z-index: 3; top: 10px; left: 12px; right: 12px; display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; font-size: .78rem; color: var(--amber); letter-spacing: .06em; text-shadow: 0 1px 6px #000; }
+.place b { font-family: var(--f-display); font-size: .95rem; color: var(--paper); letter-spacing: .02em; }
+.vn.ev .place span { color: var(--cinnabar); }
+.srcbtn { margin-left: auto; background: rgba(10,22,20,.7); color: var(--paper); cursor: pointer; }
+.srcpop { position: absolute; z-index: 4; top: 40px; left: 12px; right: 12px; background: rgba(10,22,20,.94); border: 1px solid var(--line); border-radius: 6px; padding: 10px 14px; cursor: default; }
+.srcpop .han { font-family: var(--f-han); font-size: 1.05rem; line-height: 1.9; }
+.srcpop .pg { font-size: .76rem; color: var(--dim); }
+.box { position: absolute; z-index: 2; left: 12px; right: 12px; bottom: 12px; min-height: 22%; max-height: 62%; overflow-y: auto; background: rgba(9,20,18,.88); border: 1px solid rgba(212,155,60,.45); border-radius: 6px; padding: 16px 18px 26px; box-shadow: 0 -6px 30px rgba(0,0,0,.4); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
+.name { display: inline-block; margin: -8px 0 8px; background: var(--amber); color: #1a1206; font-family: var(--f-display); font-weight: 800; font-size: .88rem; padding: 1px 12px; border-radius: 3px; }
+.name[hidden] { display: none; }
+.line { font-size: 1.02rem; line-height: 1.85; white-space: pre-wrap; }
+.line.note { color: var(--dim); font-size: .9rem; }
+.line.mono { font-style: normal; color: #f3ead6; }
+.line .changes { margin-top: 10px; white-space: normal; }
+.more { position: absolute; right: 14px; bottom: 6px; color: var(--amber); font-size: .7rem; animation: blink 1.1s steps(2) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+.menu { position: absolute; z-index: 5; inset: 0; background: linear-gradient(to bottom, rgba(6,14,12,.25), rgba(6,14,12,.78) 45%); display: flex; overflow-y: auto; padding: 44px 16px 16px; cursor: default; -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px); }
+.menu[hidden], .srcpop[hidden], .more[hidden] { display: none; }
+.menu-in { margin: auto 0; width: 100%; display: grid; gap: 10px; }
+.menu .choice { background: rgba(22,46,41,.94); }
+.menu .choice:hover { background: rgba(40,62,50,.96); }
+.menu .choice:disabled { background: rgba(22,46,41,.6); }
+.endcard { background: rgba(22,46,41,.95); border: 1px solid var(--amber); border-radius: 6px; padding: 18px; display: grid; gap: 10px; }
+.endcard h2 { font-family: var(--f-display); font-weight: 800; font-size: 1.3rem; margin: 0; }
+@media (max-width: 480px) {
+  .vn { height: clamp(520px, 78vh, 640px); }
+  .sprite { height: 78%; } .sprite.l { left: 26%; } .sprite.r { left: 74%; }
+  .box { left: 8px; right: 8px; bottom: 8px; padding: 14px 14px 24px; }
+  .line { font-size: .96rem; }
+}
+@media (prefers-reduced-motion: reduce) { .sprite, .vn { animation: none; } .more { animation: none; } }
+</style>
+<meta name="description" content="천명(天命) — 《자치통감》 현무문의 변(626)을 바탕으로 한 미연시 선택지 게임">
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1 class="logo"><span>天命</span>천명</h1>
+    <div class="tools">
+      <button class="ghost" id="btn-book" type="button">엔딩 도감</button>
+      <button class="ghost" id="btn-restart" type="button">처음부터</button>
+    </div>
+  </header>
+  <section class="hud" aria-label="수치">
+    <div class="stat s-hp"><div class="lab">체력 <b id="v-hp"></b></div><div class="bar"><i id="b-hp"></i></div></div>
+    <div class="stat s-gold"><div class="lab">재정 <b id="v-gold"></b></div><div class="bar"><i id="b-gold"></i></div></div>
+    <div class="stat s-army"><div class="lab">군사력 <b id="v-army"></b></div><div class="bar"><i id="b-army"></i></div></div>
+    <div class="stat s-fame"><div class="lab">명망 <b id="v-fame"></b></div><div class="bar"><i id="b-fame"></i></div></div>
+  </section>
+  <main id="stage"></main>
+  <footer>천명(天命) — 《자치통감》 권191 무덕 9년(626) 강독 자료를 바탕으로 만든 선택지 게임. 화면을 누르거나 Space·Enter로 대사를 넘깁니다. '사료 보기'의 쪽수는 강독 사료 PDF 기준입니다.</footer>
+</div>
+
+<script>
+const START = { hp: 70, gold: 50, army: 50, fame: 60 };
+const STATS = ["hp", "gold", "army", "fame"];
+let S, cur, pending = null;
+
+function reset() { S = Object.assign({}, START, { jingde: true, summon: false, intel: false, strategists: true, evs: 0, seen: [] }); pending = null; }
+const clamp = v => Math.max(0, Math.min(100, v));
+
+/* ---------- 장면 ----------
+   text: 문단 배열. {who, line} 은 대사.
+   src: [사료 번호, 원문, 쪽]
+   choices: label, sub(작은 설명), need(필요 수치 {gold, fame…}), eff(수치), set(상태), res(결과 문단), go(다음 장면 id 또는 함수) */
+const N = {
+  /* ---------- 독백 (게임용 창작) ---------- */
+  mono1: {
+    mono: true, date: "독백", place: "장안 · 서궁, 깊은 밤", title: "나는 이세민이다",
+    text: [
+      "잠이 오지 않는 밤이면 나는 칼을 닦는다. 이 칼로 나는 아버지의 천하를 열었다.",
+      "진양에서 아버지께 군사를 일으키자고 했을 때, 세상은 아직 수나라의 것이었다. 그 뒤 나는 쉬지 않고 싸웠다. 서쪽에서 설인고를, 북쪽에서 송금강을 무찔렀고, 낙양에서는 왕세충과 두건덕을 한 번에 사로잡았다. 아버지는 나를 위해 천책상장(天策上將)이라는, 전에 없던 이름까지 만들어 주셨다.",
+      "그런데 나는 왜 이 밤에 잠들지 못하는가."
+    ],
+    choices: [{ label: "…", next: true, go: "mono2" }]
+  },
+  mono2: {
+    mono: true, date: "독백", place: "장안 · 서궁, 깊은 밤", title: "한 도성의 두 궁",
+    text: [
+      "황태자는 형 건성이다. 맏아들이니 그 자리가 형의 것이라는 데에는 나도 할 말이 없다. 형은 동궁에, 나는 서궁에 산다. 걸어서 반나절도 안 되는 거리인데, 요즘은 천 리보다 멀다.",
+      "아우 원길은 형의 편에 섰다. 사냥터에서, 연회에서, 후궁의 치맛자락 뒤에서, 그들은 내 이름을 조금씩 갉아 먹는다. 아버지는 세 아들 사이에서 어느 쪽 손도 놓지 못하신다. 그것이 아버지의 사랑이라는 것을 안다. 그리고 그 사랑이 우리 형제를 천천히 죽이고 있다는 것도.",
+      "내 곁에는 아직 사람들이 있다. 방현령과 두여회는 내 머리가 되고, 울지경덕과 정지절은 내 칼이 되며, 장손무기는 아내의 오라비이자 내 그림자다. 동궁은 그들을 하나씩 내게서 떼어 내려 한다."
+    ],
+    choices: [{ label: "…", next: true, go: "mono3" }]
+  },
+  mono3: {
+    mono: true, date: "독백", place: "장안 · 서궁, 새벽", title: "천명은 어디에 있는가",
+    text: [
+      "옛사람들은 하늘이 천하를 맡길 사람을 고른다고 했다. 그것을 천명이라 불렀다. 그렇다면 하늘은 공을 세운 아들을 골랐는가, 먼저 태어난 아들을 골랐는가.",
+      "나는 형을 미워하지 않는다. 적어도 그렇게 믿고 싶다. 다만 한 가지는 분명하다. 이대로 가면 형과 나, 둘 중 하나는 살아서 다음 봄을 보지 못한다.",
+      "창밖이 희부옇게 밝아 온다. 누군가 서궁 문을 두드린다. 동궁에서 사람이 왔다고 한다.",
+      "무덕 9년(626) 봄. 이제부터 고르는 것은 당신이다."
+    ],
+    choices: [{ label: "문을 연다", next: true, go: "intro" }]
+  },
+  intro: {
+    date: "무덕 9년(626) 봄", place: "장안 · 서궁", title: "동궁에서 온 초대",
+    text: [
+      "당나라를 세우는 데 가장 큰 공을 세운 사람은 당신, 진왕 이세민이다. 그러나 황태자는 형 건성이고, 동생 제왕 원길은 형 편에 섰다. 아버지 고조는 세 아들 사이에서 머뭇거린다.",
+      "하늘의 뜻은 누구에게 있는가. 아무도 소리 내어 묻지 못하는 그 물음이 장안의 밤을 무겁게 누른다.",
+      "어느 밤, 동궁에서 사람이 왔다. 태자가 함께 술을 마시자고 부른다."
+    ],
+    choices: [
+      { label: "형의 초대에 응한다", eff: { gold: -5, fame: 5 }, go: "poison" },
+      { label: "몸이 좋지 않다며 사양한다", eff: { fame: -5 },
+        res: ["사양의 말은 곧 동궁에 전해졌다. '진왕이 태자를 의심한다'는 말이 궁중에 돈다. 며칠 뒤 아버지가 서궁으로 찾아왔다. 피한 잔은 다른 모습으로 다시 돌아온다. 운명이란 그런 것이다."], go: "offer" }
+    ]
+  },
+  poison: {
+    date: "무덕 9년 봄", place: "동궁 → 서궁", title: "독주",
+    text: [
+      "몇 잔을 비우자 가슴이 찢어질 듯 아프다. 당신은 피를 몇 되나 토했고, 회안왕 신통이 당신을 부축해 서궁으로 데려왔다.",
+      "소식을 들은 아버지가 서궁으로 행차했다. 아버지는 건성에게 '진왕은 본래 술을 못 마시니 이제부터 밤에 술을 마시지 말라'고만 일렀다."
+    ],
+    src: ["C-03", "建成夜召世民，飮酒而酖之，世民暴心痛，吐血數升，淮安王神通扶之還西宮。", "6004쪽"],
+    choices: [{ label: "아버지의 말을 듣는다", eff: { hp: -35, fame: 5 }, go: "offer", next: true }]
+  },
+  offer: {
+    date: "무덕 9년 봄", place: "서궁", title: "낙양으로 가라",
+    text: [
+      { who: "고조", line: "큰 계책을 처음 세우고 천하를 평정한 것은 모두 너의 공이다. 너희 형제를 보니 서로 용납하지 못할 것 같구나. 한 도성에 함께 있으면 반드시 다툼이 생긴다. 너를 행대로 돌려보내 낙양에 머물게 하고, 섬(陝) 동쪽을 모두 맡기겠다. 천자의 깃발도 세우게 하겠다. 한나라 양효왕의 고사처럼." },
+      "동쪽 절반을 다스리는 왕. 장안을 떠나면 형과 부딪칠 일은 줄어든다. 그러나 아버지 곁에서는 멀어진다."
+    ],
+    src: ["C-03", "當遣汝還行臺，居洛陽，自陝以東皆主之。仍命汝建天子旌旗，如漢梁孝王故事。", "6004쪽"],
+    choices: [
+      { label: "눈물을 흘리며 '슬하를 멀리 떠나고 싶지 않다'고 사양하는 예를 갖춘다", res: ["아버지는 '동도와 서도는 길이 매우 가까우니 내가 너를 생각하면 곧 가겠다. 슬퍼하지 말라'며 당신의 손을 잡았다. 늙은 손이 떨리고 있었다. 이것이 아버지가 아들에게 줄 수 있는 마지막 평화라는 것을, 그때는 둘 다 알지 못했다."], sub: "사료 속 세민의 반응", eff: { fame: 5, army: -5 }, go: "blocked" },
+      { label: "낙양 쪽에 금백을 풀어 두고, 그날 밤부터 서둘러 떠날 채비를 한다", need: { gold: 40 }, eff: { gold: -40, fame: -5 },
+        go: () => S.leave ? "end_luoyang" : "blocked",
+        res: () => (S.leave = S.fame >= 65 && Math.random() < 0.4) ? null
+          : ["서두르는 모습이 오히려 빌미가 되었다. 동궁은 몰래 봉사를 올리게 했다. '진왕의 측근들이 낙양으로 간다는 말을 듣고 기뻐 날뛰니, 다시 돌아오지 않을까 두렵습니다.' 아버지의 뜻이 바뀌었고, 뿌린 금백만 날아갔다. 하늘이 열어 준 문은 서두르는 사람 앞에서 먼저 닫힌다."] },
+      { label: "장안에 남아 아버지를 모시겠다고 분명히 거절한다", eff: { fame: -10 },
+        res: ["아버지는 흡족해했다. 그러나 진왕부 사람들은 '스스로 우리를 가두셨다'며 고개를 돌렸다. 장안에 남는다는 것은 장안에서 벌어질 일을 함께 짊어진다는 뜻이었다."], go: "slander" }
+    ]
+  },
+  blocked: {
+    date: "무덕 9년 봄", place: "동궁", title: "필부로 만들어라",
+    text: [
+      "출발을 앞두고 건성과 원길이 은밀히 의논했다.",
+      { who: "건성·원길", line: "진왕이 낙양에 가서 땅과 군대를 가지면 다시는 제어할 수 없다. 장안에 붙잡아 두는 것만 못하다. 그러면 한낱 필부일 뿐이니 해치우기 쉽다." },
+      "곧 '진왕의 측근들이 낙양에 간다는 말에 기뻐 날뛰니, 돌아오지 않을까 두렵다'는 밀봉 상소가 잇따랐다. 총애받는 신하들도 이해를 들어 아버지를 설득했다. 아버지의 뜻은 바뀌었고, 일은 다시 중지되었다."
+    ],
+    src: ["C-03", "秦王若至洛陽，有土地甲兵，不可復制；不如留之長安，則一匹夫耳，取之易矣。", "6004쪽"],
+    choices: [{ label: "장안에 남는다", eff: { fame: -5 }, go: "slander", next: true }]
+  },
+  slander: {
+    date: "무덕 9년", place: "태극궁", title: "밤낮의 참소",
+    text: [
+      "건성과 원길이 후궁들과 함께 밤낮으로 아버지에게 당신을 헐뜯는다. 아버지는 그 말을 믿고 당신에게 죄를 주려 한다."
+    ],
+    src: ["C-04", "建成、元吉與後宮日夜譖訴世民於上，上信之，將罪世民。", "6005쪽"],
+    choices: [
+      { label: "몸을 낮추고 기다린다. 조정에는 진숙달 같은 대신이 있다", sub: "사료의 흐름", eff: { fame: 5, hp: -5 },
+        res: ["진숙달이 간했다. '진왕은 천하에 큰 공이 있으니 내쳐서는 안 됩니다.' 아버지는 처벌을 멈추었다.",
+              "그러나 원길은 몰래 당신을 죽이라고 청했다. 아버지는 '죄상이 아직 드러나지 않았는데 무엇을 구실로 삼겠느냐'며 대답하지 않았다.", "하늘은 아직 당신을 버리지 않았다. 다만 그 하늘이 얼마나 더 기다려 줄지는 아무도 모른다."], go: "zhougong" },
+      { label: "직접 입궁해 결백을 호소한다", need: { fame: 60 }, eff: { fame: -10, hp: -5 },
+        res: ["아버지 앞에서 당신은 울었다. 전장에서 한 번도 흘리지 않던 눈물이었다. 아버지의 눈가도 젖었다. 그러나 궁문을 나서는 등 뒤로, 동궁 사람들의 눈길이 칼처럼 꽂혔다."], go: "zhougong" },
+      { label: "원길의 비행을 먼저 고발해 맞선다", eff: { fame: -15, army: 5 },
+        res: ["아버지는 '형제가 서로 헐뜯는 꼴을 더 보고 싶지 않다'며 등을 돌렸다. 그날 밤 당신은 알았다. 아우를 겨눈 말은 결국 아버지의 가슴에 박힌다는 것을."], go: "zhougong" }
+    ]
+  },
+  zhougong: {
+    date: "무덕 9년", place: "진왕부", title: "주공의 일",
+    text: [
+      "진왕부의 막료들은 두려워 어쩔 줄 모른다. 장손무기가 들어와 방현령의 말을 전한다.",
+      { who: "방현령 (장손무기가 전함)", line: "미움과 틈이 이미 생겼으니 하루아침에 화가 몰래 터지면 진왕부만 몰락하겠습니까? 사직의 근심입니다. 왕께 주공의 일을 행하여 나라를 안정시키도록 권하는 것만 못합니다. 존망의 기틀이 바로 오늘에 있습니다!" },
+      { note: "주공의 일: 주공이 반란을 일으킨 형제 관숙·채숙을 죽인 일. 곧 형과 동생을 제거하라는 뜻이다." }
+    ],
+    src: ["C-05", "莫若勸王行周公之事以安家國。存亡之機，間不容髮，正在今日！", "6005쪽"],
+    choices: [
+      { label: "아직은 때가 아니다. 결단을 미룬다", res: ["막료들은 고개를 숙이고 물러갔다. 홀로 남은 밤, 당신은 형과 함께 아버지를 따라 진양에서 군사를 일으키던 날을 떠올렸다. 그때 셋은 한편이었다. 문밖에서 누군가 중얼거렸다. '왕께서 망설이시는 사이 칼은 이미 목에 와 있습니다.'"], sub: "사료 속 세민은 오래 망설였다", eff: { fame: -5, hp: -5 }, go: "jingde" },
+      { label: "그 말이 옳다. 은밀히 군사를 모으라", need: { gold: 15 }, res: ["재물을 풀어 사방의 날랜 장사들을 몰래 진왕부로 불러들였다. 무기고에 창이 쌓여 갈수록 당신은 묻게 된다. 이 길을 고른 것은 나인가, 나를 이 길로 떠민 하늘인가."], eff: { gold: -15, army: 10, fame: -5 }, go: "jingde" },
+      { label: "형제를 죽이자는 말인가! 꾸짖어 물린다", eff: { fame: 5, army: -15 },
+        res: ["방현령은 말없이 물러났다. 몇몇 막료는 짐을 꾸리기 시작했다. 의로운 말은 당신의 이름을 지켜 주었지만, 당신을 지켜 줄 사람들은 떠나고 있었다."], go: "jingde" }
+    ]
+  },
+  jingde: {
+    date: "무덕 9년", place: "진왕부", title: "금은 한 수레",
+    text: [
+      "울지경덕이 찾아왔다. 태자가 금은 그릇 한 수레와 편지를 보냈다고 한다. 편지에는 '그대의 돌봄을 굽혀 베풀어 신분을 떠난 사귐을 두텁게 하자'고 적혀 있었다.",
+      { who: "울지경덕", line: "저는 쑥대 문에 깨진 독으로 창을 낸 사람입니다. 진왕께서 다시 살려 주신 은혜를 입고 왕부에 이름을 올렸으니, 오직 몸을 바쳐 보답할 뿐입니다. 사사로이 태자와 사귀면 두 마음을 품는 것이라 돌려보냈습니다." }
+    ],
+    src: ["C-06", "願迂長者之眷，以敦布衣之交。／敬德，蓬戶甕牖之人……唯當殺身以爲報", "6005쪽"],
+    choices: [
+      { label: "'그대 마음은 산과 같다. 받아 두었다면 저들의 계책을 알 수 있었을 것이다'", res: ["당신은 경덕에게 비단을 내렸다. 경덕은 잠시 멍하니 있다가 크게 웃었다. 의심받지 않는다는 것, 그것이 무인이 받을 수 있는 가장 큰 상이었다. 이날 맺은 믿음이 언젠가 당신의 목숨을 건지게 될 것이다."], sub: "사료 속 세민의 대답", eff: { fame: 5, gold: -10 }, set: { intel: true }, go: "jingde2" },
+      { label: "'잘 거절했다. 그대의 충성을 잊지 않겠다'", res: ["상으로 비단을 내렸다. 경덕은 무릎을 꿇고 고개를 숙였다. 사람의 마음을 얻는 일은 하늘의 뜻을 얻는 일과 닮았다. 억지로는 되지 않는다."], eff: { army: 5, gold: -10 }, go: "jingde2" },
+      { label: "정말 거절했을까? 몰래 경덕을 감시하게 한다", eff: { army: -15, gold: -5 },
+        res: ["경덕은 감시를 눈치챘다. 그는 아무 말도 하지 않았다. 다만 그날 이후 진왕부에서 그의 웃음소리가 들리지 않았다."], go: "jingde2" }
+    ]
+  },
+  jingde2: {
+    date: "무덕 9년", place: "경덕의 집 → 조옥", title: "열어 둔 겹문",
+    text: [
+      "얼마 뒤 원길이 보낸 자객이 밤에 경덕을 노렸다. 경덕은 겹문을 활짝 열어 두고 태연히 누워 있었고, 자객은 몇 번이나 뜰까지 왔으나 끝내 들어오지 못했다.",
+      "그러자 원길은 경덕을 참소했다. 경덕은 조옥에 갇혀 곧 죽게 되었다."
+    ],
+    src: ["C-06", "敬德知之，洞開重門，安臥不動，刺客屢至其庭，終不敢入。", "6006쪽"],
+    choices: [
+      { label: "아버지께 끝까지 청해 경덕을 살린다", need: { fame: 65 }, res: ["당신은 몇 번이고 아버지 앞에 엎드렸다. 이마가 바닥에 닿을 때마다 쌓아 온 명망이 조금씩 깎여 나갔다. 마침내 경덕은 풀려났다. 옥문을 나선 그는 아무 말 없이 당신에게 절했다. 그 절의 무게를, 당신은 6월 4일에야 알게 된다."], sub: "사료 속 세민의 행동", eff: { fame: -15, army: 5 }, set: { jingde: true }, go: "purge" },
+      { label: "옥리와 대신들에게 재물을 풀어 경덕을 빼낸다", need: { gold: 30 }, eff: { gold: -30, fame: -10 }, set: { jingde: true }, res: ["재물이 오가자 국문이 슬그머니 멈췄다. 경덕은 살아 나왔지만, '진왕이 뇌물로 옥사를 뒤집었다'는 말이 조정에 퍼졌다. 목숨은 건졌으나 이름에 얼룩이 졌다."], go: "purge" },
+      { label: "지금 나서면 의심을 산다. 모른 척한다", eff: { army: -20, fame: -10 }, set: { jingde: false },
+        res: ["경덕은 처형되었다. 형장으로 끌려가며 그는 진왕부 쪽을 한 번 돌아보았다고 한다. 장수들은 말없이 서로의 얼굴만 바라보았다. 다음은 누구인가."], go: "purge" }
+    ]
+  },
+  purge: {
+    date: "무덕 9년", place: "진왕부", title: "떨어지는 팔다리",
+    text: [
+      "정지절은 강주자사로 쫓겨났다. 떠나며 그가 말했다.",
+      { who: "정지절", line: "대왕의 팔다리와 날개가 다 떨어지니 몸이 어찌 오래 가겠습니까. 저는 죽어도 떠나지 않겠습니다. 일찍 결단하소서." },
+      "방현령과 두여회도 참소를 받아 왕부에서 쫓겨났다. 당신은 영주대도독 이정과 행군총관 이세적에게 뜻을 물었지만 두 사람 모두 사양했다."
+    ],
+    src: ["C-06·07", "大王股肱羽翼盡矣，身何能久！知節以死不去，願早決計。", "6006쪽"],
+    choices: [
+      { label: "사양한 두 사람을 오히려 귀하게 여긴다", res: ["정지절은 강주자사로, 단지현은 다른 곳으로 떠났다. 텅 빈 진왕부 마당에 바람만 지나간다. 그래도 당신은 사양한 이정과 이세적을 원망하지 않았다. 사람에게는 저마다 지고 갈 몫이 있다. 남은 이들은 그런 주인을 보았다."], sub: "世民由是重二人 (C-07)", eff: { fame: 5, army: -10 }, go: "turk" },
+      { label: "명망을 걸고, 장수들을 곁에 남겨 달라고 아버지께 청한다", need: { fame: 70 }, eff: { fame: -15, army: -3 }, res: ["조정의 신망이 두터운 아들의 청을 아버지도 다 물리치지는 못했다. 정지절은 떠났지만 단지현은 장안에 남게 되었다. 대신 동궁은 진왕의 입김이 세다며 더 경계한다."], go: "turk" },
+      { label: "도움을 거절한 두 사람을 원망한다", res: ["장수들은 떠났고, 당신의 원망은 진왕부 안에 퍼졌다. 남은 사람들도 '다음은 나인가' 하고 몸을 사린다. 원망은 하늘을 움직이지 못하고, 사람만 멀어지게 한다."], eff: { fame: -5, army: -10 }, go: "turk" }
+    ]
+  },
+  turk: {
+    date: "무덕 9년 6월 초", place: "진왕부", title: "곤명지의 전송연",
+    text: [
+      "돌궐이 수만 기병을 이끌고 쳐들어왔다. 건성의 추천으로 원길이 북정을 맡았고, 원길은 경덕·정지절·단지현·진숙보 등 진왕부의 정예를 모두 데려가겠다고 한다.",
+      "그날 밤 동궁의 솔경승 왕질이 몰래 찾아왔다.",
+      { who: "왕질", line: "태자가 제왕에게 말했습니다. '진왕과 함께 곤명지에서 너를 전송할 때, 장사를 시켜 장막 안에서 진왕을 죽이고 갑자기 죽었다고 아뢰겠다. 경덕 등이 네 손에 들어오면 모두 구덩이에 묻어라.'" }
+    ],
+    src: ["C-08", "吾與秦王餞汝於昆明池，使壯士拉殺之於幕下，奏云暴卒，主上宜無不信。", "6008쪽"],
+    choices: [
+      { label: "막료들을 모아 의논하고 결단한다", sub: "사료의 흐름", eff: { fame: 5, hp: -5 },
+        res: ["막료들이 입을 모았다. '제왕은 흉포하여 끝내 형도 섬기지 않을 것입니다. 두 사람이 뜻을 이루면 천하는 다시 당의 것이 아닐까 두렵습니다.'", "돌아갈 길은 없다. 당신은 처음으로 그 사실을 받아들였다."], go: "fangdu" },
+      { label: "이 음모를 아버지께 그대로 고한다", need: { fame: 70 },
+        go: () => S.fame >= 70 ? "fangdu" : "end_kunming",
+        eff: { army: -10, fame: -15 },
+        res: () => S.fame >= 70
+          ? ["아버지는 반신반의하며 결정을 미뤘다. 늙은 황제는 끝내 어느 아들도 버리지 못한다. 그렇다면 고르는 일은 아들의 몫이다."]
+          : ["아버지는 '또 형을 모함하느냐'며 당신을 꾸짖었다. 장수들은 원길을 따라 떠났다."] },
+      { label: "장수들을 내주고 전송연에 나간다. 형이 설마…", eff: { army: -20 }, go: "end_kunming" }
+    ]
+  },
+  fangdu: {
+    date: "6월 초", place: "진왕부", title: "도사 옷의 두 사람",
+    text: [
+      "결단하려면 방현령과 두여회가 필요하다. 장손무기를 보내 몰래 불렀으나 답이 왔다.",
+      { who: "방현령·두여회", line: "칙명으로 다시는 왕을 섬기지 못하게 되었습니다. 지금 몰래 뵈면 반드시 죽습니다. 명을 받들 수 없습니다." }
+    ],
+    src: ["C-10", "敕旨不聽復事王；今若私謁，必坐死，不敢奉教！", "6009쪽"],
+    choices: [
+      { label: "차고 있던 칼을 내주며 '올 마음이 없으면 목을 베어 오라'고 명한다", sub: "사료 속 세민", eff: { army: 5, fame: -5 },
+        res: ["'왕께서 이미 결심하셨다.' 두 사람은 도사 옷으로 갈아입고 어둠을 틈타 왕부로 들어왔다. 칼을 내준 그 순간, 당신은 돌아갈 다리를 스스로 끊었다."], go: "taibai" },
+      { label: "직접 찾아가 머리를 숙여 설득한다", need: { fame: 55 }, eff: { fame: 10, hp: -10 },
+        res: ["두 사람은 감격해 따라나섰다. 머리를 숙인 왕을 위해 목숨을 거는 것, 그것이 선비가 받은 천명이었다. 다만 진왕이 밤에 성안을 다녔다는 소문이 동궁에 들어갔다."], go: "taibai" },
+      { label: "그들 없이 하겠다", res: ["두 사람을 부르지 않았다. 막료 회의는 금세 끝났지만, 누구도 계책의 빈틈을 짚어 주지 않는다. 현무문에서는 군사의 힘만 믿어야 한다."], eff: { fame: -10, hp: -5 }, set: { strategists: false }, go: "taibai" }
+    ]
+  },
+  taibai: {
+    date: "6월 3일", place: "태극궁", title: "태백성이 하늘을 가로지르다",
+    text: [
+      "태백성(금성)이 다시 낮에 하늘을 가로질렀다. 태사령 부혁이 몰래 아뢰었다. '태백이 진(秦)의 분야에 나타났으니 진왕이 천하를 가질 것입니다.'",
+      "아버지는 말없이 그 상주문을 당신에게 건네주었다."
+    ],
+    src: ["C-11", "太白見秦分，秦王當有天下。上以其狀授世民。", "6009쪽"],
+    choices: [
+      { label: "형들이 후궁을 음란하게 범했다고 밀고하고, 억울함을 호소한다", sub: "사료 속 세민의 밀주 · 명망 55 이상이어야 아버지가 믿는다", eff: { fame: -5 },
+        res: () => (S.summon = S.fame >= 55) ? ["'신이 지금 억울하게 죽으면 지하에서 왕세충·두건덕 같은 도적들을 볼 낯이 없습니다!' 아버지는 놀라며 '내일 아침 따져 물을 것이니 일찍 들어오라'고 했다.", "별은 당신을 가리켰고, 이제 당신의 말이 아버지를 움직였다. 운명의 수레바퀴가 굴러가기 시작했다."] : ["아버지는 '형들을 또 헐뜯느냐'며 상주문을 덮어 버렸다. 조정에서 당신의 말을 믿어 줄 사람이 없다. 형제가 내일 궁에 들어올 일은 없다."], go: "june4" },
+      { label: "'천문은 믿을 것이 못 됩니다'라며 상주문을 돌려드린다", eff: { fame: 5, army: -5 }, set: { summon: false },
+        res: ["아버지는 고개를 끄덕였을 뿐이다. 하늘이 내민 손을 당신은 밀어냈다. 형제가 내일 궁에 들어올 명분은 생기지 않았다."], go: "june4" },
+      { label: "엎드려 사죄하고, 이제라도 낙양으로 보내 달라 청한다",
+        go: () => S.fame >= 80 ? "end_luoyang" : "june4",
+        res: () => S.fame >= 80 ? null : ["아버지는 대답하지 않았다. 별은 이미 진(秦)의 하늘에 떴는데 당신만 그것을 외면하려 했다. 의심만 깊어졌다."], eff: { fame: -10 } }
+    ]
+  },
+  june4: {
+    date: "6월 4일 새벽", place: "현무문", title: "현무문",
+    text: [
+      "장첩여가 당신의 표문 내용을 엿듣고 건성에게 달려가 알렸다.",
+      { who: "원길", line: "궁부의 병사를 단속하고 병을 핑계로 입조하지 말고 형세를 지켜봅시다." },
+      { who: "건성", line: "방비가 이미 엄하다. 아우와 함께 들어가 직접 소식을 알아보자." },
+      "궁성 북문, 현무문. 이곳을 지나야 형제가 아버지에게 갈 수 있다."
+    ],
+    src: ["C-12", "庚申，世民帥長孫無忌等入，伏兵於玄武門。", "6010쪽"],
+    choices: [
+      { label: "장손무기 등을 이끌고 현무문에 군사를 숨긴다", eff: { hp: -5, gold: -10 }, res: ["6월 4일 이른 새벽, 당신은 장손무기 등과 함께 현무문 안쪽에 몸을 숨겼다. 동쪽 하늘이 희게 밝아 온다. 오늘 해가 질 때 당신은 황태자이거나, 역적이거나, 시신일 것이다."], sub: "사료의 흐름", go: () => !S.summon ? "end_closed" : "linhu" },
+      { label: "군사를 일으켜 동궁을 정면으로 친다", eff: { army: -20 }, res: ["당신은 진왕부 군사를 모두 이끌고 동궁으로 내달렸다. 그러나 궁성 안에서 군사를 일으켰다는 것은 곧 반역이다. 하늘의 뜻을 기다리지 못한 칼이었다."], go: "end_rebel" },
+      { label: "끝내 손을 거두고 아버지의 판단을 기다린다", eff: { fame: -10 }, res: ["당신은 군사를 해산하고 서궁 문을 닫았다. 하늘이 정해 준다면 무엇이든 받아들이겠다고 생각했다. 그러나 옛말에, 하늘은 스스로 돕는 자를 돕는다고 했다."], go: "end_hesitate" }
+    ]
+  },
+  linhu: {
+    date: "6월 4일", place: "임호전", title: "임호전",
+    text: () => [
+      "건성과 원길이 임호전에 이르러 변고를 눈치채고 곧 말머리를 돌려 동쪽으로 달아났다. 당신이 뒤쫓으며 부르자, 원길이 활을 당겼으나 두세 번이나 시위를 끝까지 당기지 못했다.",
+      "당신의 화살이 건성을 맞혔다.",
+      S.jingde
+        ? "그때 당신의 말이 숲으로 내달려 나뭇가지에 걸렸고, 당신은 땅에 떨어져 일어나지 못했다. 원길이 달려와 활을 빼앗아 당신의 목을 조르려 한다. 그 순간 경덕이 말을 달려오며 크게 꾸짖었다. 원길은 무덕전 쪽으로 달아나다 경덕의 화살에 쓰러졌다."
+        : "그때 당신의 말이 숲으로 내달려 나뭇가지에 걸렸고, 당신은 땅에 떨어져 일어나지 못했다. 원길이 달려와 활을 빼앗아 당신의 목을 조른다. 경덕은 이곳에 없다."
+    ],
+    src: ["C-13", "元吉張弓射世民，再三不彀，世民射建成，殺之。尉遲敬德將七十騎繼至，左右射元吉墜馬。", "6010쪽"],
+    choices: [{ label: "…", next: true, go: () => !S.jingde ? "end_linhu" : (S.army + Math.floor(S.fame / 5) < (S.strategists ? 62 : 77) ? "end_gate" : "haichi") }]
+  },
+  haichi: {
+    date: "6월 4일", place: "해지(海池)", title: "배 위의 황제",
+    text: [
+      "동궁과 제왕부의 군사가 현무문으로 몰려왔지만, 두 사람의 죽음이 알려지자 흩어졌다.",
+      "아버지는 지금 궁 안 연못 해지에 배를 띄우고 있다. 아직 아무것도 모른다. 누가 가서 알릴 것인가."
+    ],
+    src: ["C-14", "上方泛舟海池。世民使尉遲敬德入宿衛，敬德擐甲持矛，直至上所。", "6011쪽"],
+    choices: [
+      { label: "경덕에게 갑옷을 입고 창을 든 채 아버지를 '호위'하게 한다", eff: { fame: -10 }, res: () => S.fame >= 40 ? ["경덕이 갑옷을 입고 창을 든 채 곧장 해지로 들어갔다. 크게 놀란 황제가 물었다. '오늘 난을 일으킨 자가 누구냐? 경은 여기에 무엇하러 왔느냐?' 경덕이 답했다. '태자와 제왕이 난을 일으켜 진왕께서 군사를 일으켜 죽였습니다. 폐하를 놀라게 할까 두려워 신을 보내 숙위하게 하셨습니다.'"] : ["경덕이 창을 들고 들어서자 배적이 외쳤다. '진왕이 폐하를 협박합니다!' 조정에 당신 편은 없었다."], sub: "사료 속 세민", go: () => S.fame >= 40 ? "end_history" : "end_haichi" },
+      { label: "직접 가서 엎드려 죄를 청한다", eff: { hp: -5 }, go: () => S.fame >= 80 ? "end_history" : "end_haichi",
+        res: () => S.fame >= 80 ? ["아버지는 오래 말이 없다가 당신을 일으켜 세웠다. 곁의 소우와 진숙달이 말했다. '진왕의 공은 우주를 덮으니, 태자로 삼아 국사를 맡기시면 다시 일이 없을 것입니다.'"] : null }
+    ]
+  },
+
+  /* ---------- 결말 ---------- */
+  end_history: { end: true, kind: "hist", tag: "역사 엔딩", title: "정관의 문을 열다",
+    text: [
+      { who: "고조", line: "오늘 난을 일으킨 자는 누구냐? 경은 여기 무엇 하러 왔느냐?" },
+      { who: "울지경덕", line: "태자와 제왕이 난을 일으켜 진왕께서 군사를 일으켜 베었습니다. 폐하를 놀라게 할까 저를 보내 호위하게 하셨습니다." },
+      "아버지는 '좋다. 이것이 내 오랜 마음이었다'라고 말했다. 사흘 뒤 당신은 황태자가 되었고, 두 달 뒤 동궁 현덕전에서 황제 자리에 올랐다. 건성과 원길의 아들 열 명은 모두 죽임을 당하고 족보에서 지워졌다.",
+      "사람들은 천명이 진왕에게 있었다고 말할 것이다. 태백성이 그렇게 일렀고, 역사도 그렇게 적을 것이다. 그러나 당신은 안다. 그날 임호전에서 시위를 떠난 화살은 하늘이 아니라 당신의 손을 떠났다는 것을. 정관(貞觀)의 치세는 그 무게를 평생 짊어진 사람이 연 시대였다."
+    ],
+    fact: "실제 역사와 같은 결말입니다. 사마광은 '적장자를 세우는 것이 예의 바름'이라면서도, 고조에게 문왕의 밝음이, 건성에게 태백의 어짊이, 세민에게 자장의 절개가 있었다면 난이 일어나지 않았을 것이라고 평했습니다.",
+    refs: "C-14 · C-15 · C-18 · C-19 · C-23" },
+  end_luoyang: { end: true, kind: "if", tag: "가상 역사 엔딩", title: "동도의 진왕",
+    text: ["당신은 동궁이 손쓰기 전에 낙양으로 떠났다. 천자의 깃발을 세운 진왕은 섬 동쪽을 다스린다. 장안의 태자와 낙양의 진왕, 당나라에는 사실상 두 개의 조정이 생겼다. 평화는 아버지가 살아 있는 동안만 이어질 것이다. 낙양 성루에 별이 뜨는 밤이면 당신은 서쪽 하늘을 본다. 하늘이 정한 길을 비켜 선 것인가, 하늘이 처음부터 이 길을 열어 둔 것인가. 그 답은 아버지가 세상을 떠나는 날에야 알게 될 것이다."],
+    fact: "실제로는 건성·원길이 '낙양에 가면 땅과 군대가 생겨 제어할 수 없다'며 밀봉 상소로 고조의 마음을 돌려 낙양 분봉이 무산되었습니다. 평화적 해결의 마지막 기회였습니다.",
+    refs: "C-02 · C-03" },
+  end_kunming: { end: true, kind: "dead", tag: "죽음 엔딩", title: "곤명지의 전송연",
+    text: ["곤명지 물가에 장막이 쳐졌다. 원길을 전송하는 술자리가 무르익을 무렵, 장사들이 장막 안으로 들어왔다. 다음 날 조정에는 '진왕이 갑자기 죽었다'는 보고가 올라갔다. 북정에 따라간 경덕과 장수들은 구덩이에 묻혔다. 별은 진의 하늘에 뜨려 했다. 그러나 별을 받을 사람이 먼저 사라지면, 천명은 누구에게로 가는가."],
+    fact: "실제로는 동궁의 솔경승 왕질이 이 계획을 미리 세민에게 밀고했고, 세민은 이것을 계기로 결단했습니다.",
+    refs: "C-08 · C-09" },
+  end_linhu: { end: true, kind: "dead", tag: "죽음 엔딩", title: "임호전의 나뭇가지",
+    text: ["나뭇가지에 걸려 떨어진 당신 위로 원길이 올라탔다. 활시위가 목을 파고든다. 경덕이 있었다면 달라졌을까. 감옥에서 그를 구하지 않았던 날이 마지막으로 떠오른다. 하늘이 보내 준 사람을, 당신은 스스로 놓아 버렸다."],
+    fact: "실제로는 세민이 경덕을 위해 고조에게 끝까지 청해 살려 두었고, 6월 4일 원길이 세민을 덮쳤을 때 경덕이 달려와 원길을 죽였습니다. 매수를 거절한 장수가 거사의 주역이 되었습니다.",
+    refs: "C-06 · C-13" },
+  end_gate: { end: true, kind: "dead", tag: "패배 엔딩", title: "뚫린 현무문",
+    text: ["두 형제는 쓰러졌다. 그러나 동궁과 제왕부의 정예 수천이 현무문으로 밀려들었고, 수가 모자란 진왕부 군사는 문을 지키지 못했다. 혼란 속에 아버지의 금군이 움직였다. 형제를 죽인 자로 남은 것은 당신 하나였다. 천명은 길을 보여 줄 뿐, 그 길을 지킬 칼까지 쥐여 주지는 않는다."],
+    fact: "실제로는 진왕부가 현무문을 지켜 냈고, 건성·원길의 죽음이 알려지자 동궁 쪽 군사가 흩어졌습니다. 이후 세민은 끝까지 저항한 동궁 장수 풍립·설만철 등을 '섬기던 주인에게 충성한 의사'라며 풀어 주었습니다.",
+    refs: "C-13 · C-17" },
+  end_closed: { end: true, kind: "if", tag: "실패 엔딩", title: "닫힌 동궁",
+    text: ["형제는 오지 않았다. 원길의 말대로 병을 핑계로 입조하지 않고 동궁의 문을 굳게 닫았다. 해가 높이 뜨자 현무문의 복병이 드러났다. '진왕이 궁문에 군사를 숨겼다.' 이제 반역자는 당신이다. 하늘이 내일의 문을 열어 주었을 때, 당신은 그 문을 두드리지 않았다."],
+    fact: "실제로는 원길이 '병을 핑계로 입조하지 말자'고 했지만 건성이 '방비가 엄하니 들어가 보자'며 입궁했습니다. 세민의 밀주로 고조가 다음 날 아침 형제를 부르기로 한 것도 이들이 들어온 이유였습니다.",
+    refs: "C-11 · C-12" },
+  end_rebel: { end: true, kind: "dead", tag: "패배 엔딩", title: "동궁 공격",
+    text: ["진왕부 군사가 동궁으로 쳐들어가자 장안은 전쟁터가 되었다. 아버지는 당신을 반역자로 선포했다. 천하를 평정한 장수는 이제 천하의 적이다. 하늘의 뜻을 칼로 앞당기려 한 사람을, 역사는 찬탈자라 부른다."],
+    fact: "실제 거사는 궁 안에서, 고조가 형제를 부른 그 길목(현무문)에 매복하는 방식이었습니다. 정면 공격이 아니라 황제의 부름을 이용했다는 점이 핵심입니다.",
+    refs: "C-11 · C-12" },
+  end_hesitate: { end: true, kind: "dead", tag: "몰락 엔딩", title: "주공이 되지 못한 왕",
+    text: ["당신은 끝내 손을 거두었다. 아버지 앞에서 형제와 대질했지만, 후궁과 대신들은 태자 편이었다. 진왕부는 해체되었고 당신은 먼 곳으로 보내졌다. 몇 해 뒤 '진왕이 병으로 죽었다'는 소식이 장안에 전해졌다. 끝까지 형을 해치지 않은 아우. 그 이름은 어떤 역사책에도 크게 남지 않았다. 그러나 피 묻지 않은 손으로 눈을 감은 것만은, 오롯이 당신의 것이었다."],
+    fact: "방현령은 '존망의 기틀이 바로 오늘에 있다'며 결단을 재촉했습니다. 사료는 세민을 망설이는 사람으로, 참모들을 설득하는 사람으로 그려 세민의 책임을 덜어 주는 방식으로 서술합니다.",
+    refs: "C-05 · C-07" },
+  end_sick: { end: true, kind: "dead", tag: "병사 엔딩", title: "병상의 진왕",
+    text: ["독주와 역병, 쉬지 못한 나날이 몸을 무너뜨렸다. 형과 겨루기도 전에 당신은 병상에서 일어나지 못했다. 진숙달이 '헤아릴 수 없는 병이 생길까 두렵다'고 했던 말이 그대로 되었다. 천명이 있다 한들 그것을 받을 몸이 먼저 무너지면 그만이다. 마지막으로 바라본 창밖의 하늘은 아무 말이 없었다."],
+    fact: "실제로 세민은 독주를 마시고 피를 몇 되나 토했지만 살아남았습니다. 진숙달은 고조에게 '진왕을 억누르면 근심과 분노를 이기지 못해 헤아릴 수 없는 병이 생길 수 있다'고 간했습니다.",
+    refs: "C-03 · C-04" },
+  end_haichi: { end: true, kind: "dead", tag: "패배 엔딩", title: "해지의 배",
+    text: ["당신이 엎드리자 아버지는 아들 둘의 죽음을 들었다. 배적이 외쳤다. '진왕을 잡으십시오!' 금군이 해지를 에워쌌다. 무장한 사람 하나 없이 온 당신을 지켜 줄 것은 아무것도 없었다. 아버지의 눈에 비친 것은 하늘이 고른 아들이 아니라, 형제를 죽인 아들이었다."],
+    fact: "실제로는 갑옷을 입고 창을 든 경덕이 '호위'라는 명목으로 고조 곁에 섰습니다. 고조에게는 사실상 추인 말고는 길이 없었습니다.",
+    refs: "C-14" }
+};
+/* ---------- 돌발 사건 (사료에 없는 가상 사건) ---------- */
+const EV = {
+  ev_silk: { place: "장안 · 서시(西市)", title: "서역 상단의 방문",
+    text: [
+      "서시에서 장사하는 소그드 상단의 우두머리 강(康)씨가 낙타 행렬에 비단과 은그릇을 싣고 진왕부를 찾아왔다. 하서(河西)를 지나는 교역로를 진왕께서 지켜 달라는 청이다.",
+      { note: "당 초 장안 서시에는 소그드 등 서역 상인이 많이 머물렀다." }
+    ],
+    choices: [
+      { label: "후원을 받아 진왕부 재정에 보탠다", res: ["강씨는 비단 수레를 진왕부 창고에 부려 놓고 돌아갔다. 창고는 넉넉해졌지만, 동궁에서는 '진왕이 오랑캐 장사꾼의 돈을 받는다'고 수군거린다."], eff: { gold: 25, fame: -5 } },
+      { label: "받은 재물로 곧장 군마와 병장기를 산다", res: ["재물은 그날로 서역 말과 쇠뇌, 갑옷으로 바뀌었다. 진왕부 마구간이 북적인다."], eff: { gold: 10, army: 10 } },
+      { label: "'사사로운 재물은 받지 않는다'며 돌려보낸다", res: ["답례로 비단 몇 필을 들려 보내자 강씨는 놀라 몇 번이나 절하고 물러갔다. 이 이야기는 서시에서 장안 전체로 퍼졌다. '진왕은 재물에 깨끗하다.'"], eff: { fame: 10, gold: -5 } }
+    ] },
+  ev_revolt: { place: "관중 북부", title: "굶주린 백성들",
+    text: ["돌궐의 노략질로 농사를 망친 관중 북쪽 고을에서 백성들이 관아를 습격했다. 조정에서는 누가 수습할지를 두고 동궁과 진왕부가 서로 눈치를 본다."],
+    choices: [
+      { label: "진왕부 군사를 이끌고 가서 진압한다", res: ["사흘 밤낮을 달려 난을 진압했다. 공은 세웠지만 군사를 잃었고, 당신도 몸이 많이 상했다."], eff: { army: -10, fame: 5, hp: -5 } },
+      { label: "몸소 찾아가 명망으로 백성을 달랜다", need: { fame: 65 }, eff: { fame: -10, hp: -5, army: 5 }, res: ["진왕이 직접 왔다는 말에 무리가 술렁였다. 당신이 '굶어 죽게 두지 않겠다'고 약속하자 백성들은 무기를 내려놓았고, 젊은이 몇백이 진왕부 군에 들기를 청했다. 다만 약속을 지켜야 하는 짐이 생겼다."] },
+      { label: "진왕부 창고를 열어 곡식을 나눠 준다", need: { gold: 20 }, res: ["곡식 수레가 들어가자 무기를 들었던 백성들이 땅에 엎드려 울었다. 관중 북쪽 고을마다 진왕을 칭송하는 노래가 퍼진다."], eff: { gold: -20, fame: 15 } },
+      { label: "동궁에 맡기고 나서지 않는다", res: ["동궁이 군사를 보내 난을 진압했다. 백성들은 '진왕은 어디 있었느냐'고 묻는다."], eff: { fame: -10 } }
+    ] },
+  ev_plague: { place: "장안", title: "여름 역병",
+    text: ["장안에 역병이 돌았다. 진왕부에도 앓는 사람이 늘더니 당신도 열이 오르고 기침이 멎지 않는다."],
+    choices: [
+      { label: "의원을 불러 며칠 쉰다", need: { gold: 10 }, res: ["의원이 지어 준 탕약을 마시고 사흘을 누워 있었다. 열이 내리고 숨이 고르게 돌아왔다."], eff: { gold: -10, hp: 5 } },
+      { label: "지금 쉴 수는 없다. 그대로 일한다", res: ["열에 들뜬 채 정무를 보았다. 사람들은 진왕의 의지에 감탄했지만, 밤마다 기침에 피가 섞여 나온다. 하늘이 정한 수명은 사람이 재촉할 수 있는 것이 아니건만."], eff: { hp: -20, fame: 5 } },
+      { label: "약재를 사서 군사들에게 먼저 나눠 준다", need: { gold: 15 }, res: ["군영의 병사들은 살아났고 '진왕을 위해서라면 죽어도 좋다'고 말한다. 정작 당신의 병은 더 깊어졌다. 병사들의 목숨을 당신의 목숨과 바꾼 셈이었다."], eff: { gold: -15, hp: -15, army: 10 } }
+    ] },
+  ev_horse: { place: "장안 · 말 시장", title: "명마 백 필",
+    text: ["서역에서 온 상인이 명마 백 필을 끌고 왔다. 값은 비싸지만 진왕부 기병을 크게 늘릴 수 있다."],
+    choices: [
+      { label: "모두 사들인다", need: { gold: 25 }, res: ["백 필의 서역 말이 진왕부 마구간을 가득 채웠다. 기병이 크게 늘었다."], eff: { gold: -25, army: 15 } },
+      { label: "스무 필만 산다", need: { gold: 10 }, res: ["가장 좋은 말 스무 필을 골라 샀다. 날랜 기병 한 무리가 더 생겼다."], eff: { gold: -10, army: 5 } },
+      { label: "사지 않는다", res: ["상인은 아쉬워하며 말을 끌고 동궁 쪽으로 향했다. '진왕이 좋은 말을 동궁에 넘겼다'는 말이 돈다."], eff: { fame: -5 } }
+    ] },
+  ev_hunt: { place: "장안 교외 사냥터", title: "사나운 말",
+    text: ["형제가 함께 사냥을 나갔다. 원길이 웃으며 길들지 않은 사나운 말 한 필을 당신에게 권한다. 타지 않으면 겁쟁이라는 소문이 돌 것이다."],
+    choices: [
+      { label: "말에 올라탄다", sub: "길들일 수도, 떨어질 수도 있다",
+        res: () => (S.fell = Math.random() < 0.5)
+          ? ["말이 미친 듯이 날뛰었다. 몇 걸음 못 가 당신은 굴러떨어져 땅에 처박혔다. 갈비뼈가 욱신거린다. 원길은 웃음을 참지 못했다. 그래도 피하지 않았다는 말은 남았다. 하늘이 아직 당신을 데려갈 생각은 없는 모양이다."]
+          : ["말이 몇 번이나 앞발을 치켜들었지만 당신은 고삐를 놓지 않았다. 마침내 말이 고개를 숙였다. 지켜보던 장수들이 환호했고, 원길의 얼굴이 굳었다."],
+        eff: () => S.fell ? { hp: -20, fame: 5 } : { fame: 15 } },
+      { label: "정중히 사양한다", res: ["원길이 크게 웃었다. '천하를 평정한 진왕께서 말 한 필이 무서우시오?' 그날 저녁, 그 말은 장안 곳곳으로 퍼졌다."], eff: { fame: -5 } }
+    ] },
+  ev_drought: { place: "진왕부 군영", title: "모자란 군량",
+    text: ["가뭄으로 곡식값이 뛰었다. 진왕부에 딸린 군사들의 군량이 바닥나 간다."],
+    choices: [
+      { label: "사재를 털어 군량을 산다", need: { gold: 20 }, res: ["비싼 값에 곡식을 사들여 군영에 보냈다. 굶주리던 병사들의 얼굴이 펴졌다."], eff: { gold: -20, army: 5 } },
+      { label: "명망을 걸고 장안 부호들에게 곡식을 빌린다", need: { fame: 65 }, eff: { fame: -10, army: 5 }, res: ["부호들은 진왕의 이름을 믿고 곳간을 열었다. 군량은 채웠지만, 갚지 못하면 그 이름에 금이 간다."] },
+      { label: "군사 일부를 고향으로 돌려보낸다", res: ["병사 수백 명이 짐을 꾸려 떠났다. 군영이 한결 조용해졌다."], eff: { army: -15 } },
+      { label: "낙양의 장량에게 금백을 보내라고 한다", res: ["낙양에서 금백이 왔다. 그러나 '진왕이 낙양에 사사로이 재물을 쌓아 두었다'는 말이 조정에 돌기 시작했다."], eff: { gold: 10, fame: -10 } }
+    ] }
+};
+for (const k in EV) {
+  EV[k].ev = true; EV[k].date = "돌발 사건";
+  EV[k].choices.forEach(c => { c.go = () => pending; });
+  N[k] = EV[k];
+}
+const EV_SLOTS = ["slander", "zhougong", "jingde", "purge", "turk", "fangdu", "taibai"];
+const EV_MAX = 3;
+
+const ENDS = Object.keys(N).filter(k => N[k].end);
+
+/* 장면별 그림 (assets/). 전용 그림이 없는 장면은 가까운 그림을 함께 쓴다 */
+const ART = {
+  mono1: "title", mono2: "bg_donggong", mono3: "bg_xigong", intro: "bg_xigong", poison: "bg_feast", offer: "bg_xigong", blocked: "bg_donggong", slander: "title",
+  zhougong: "bg_donggong", jingde: "bg_gold", jingde2: "bg_opengate", purge: "title", turk: "bg_feast",
+  fangdu: "bg_taoist", taibai: "title", june4: "bg_xuanwu", linhu: "bg_linhu", haichi: "bg_haichi",
+  end_history: "bg_haichi", end_luoyang: "title", end_kunming: "bg_feast", end_linhu: "bg_linhu", end_gate: "bg_xuanwu",
+  end_closed: "bg_xuanwu", end_rebel: "bg_xuanwu", end_hesitate: "bg_xigong", end_haichi: "bg_haichi", end_sick: "bg_xigong",
+  ev_silk: "bg_gold", ev_plague: "bg_xigong"
+};
+const artSrc = k => `assets/${k}.webp`;
+new Set(Object.values(ART)).forEach(k => { const im = new Image(); im.src = artSrc(k); });
+let shown = "title";
+const art = k => k ? `<div class="art"><img src="${artSrc(k)}" alt=""></div>` : "";
+
+/* ---------- 엔딩 기록 (이 브라우저에만) ---------- */
+function loadGot() { try { return JSON.parse(localStorage.getItem("hm626-ends") || "[]"); } catch { return []; } }
+function saveGot(id) { try { const g = new Set(loadGot()); g.add(id); localStorage.setItem("hm626-ends", JSON.stringify([...g])); } catch {} }
+
+/* ---------- 그리기 ---------- */
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const val = v => typeof v === "function" ? v() : v;
+
+function paintHud(d = {}) {
+  for (const k of STATS) {
+    $("v-" + k).innerHTML = S[k] + (d[k] ? `<span class="delta ${d[k] > 0 ? "up" : "down"}">${d[k] > 0 ? "+" : ""}${d[k]}</span>` : "");
+    $("b-" + k).style.width = S[k] + "%";
+  }
+}
+/* ---------- 등장인물 (assets/char_*.png) ---------- */
+const CHAR = { shimin: "이세민", gaozu: "고조", jiancheng: "이건성", yuanji: "이원길", jingde: "울지경덕", fang: "방현령", du: "두여회", zhangsun: "장손무기" };
+const WHO = { "고조": ["gaozu"], "건성": ["jiancheng"], "원길": ["yuanji"], "건성·원길": ["jiancheng", "yuanji"], "울지경덕": ["jingde"],
+  "방현령 (장손무기가 전함)": ["zhangsun"], "방현령·두여회": ["fang", "du"], "왕질": [], "정지절": [] };
+/* 서술 문단에서 화면에 세워 둘 인물 */
+const CAST = {
+  mono1: ["shimin"], mono2: ["shimin"], mono3: ["shimin"], intro: ["jiancheng"], poison: ["gaozu"], offer: ["gaozu"],
+  blocked: ["jiancheng", "yuanji"], slander: ["gaozu"], zhougong: ["zhangsun"], jingde: ["jingde"], jingde2: ["jingde"],
+  purge: ["shimin"], turk: ["yuanji"], fangdu: ["fang", "du"], taibai: ["gaozu"], june4: ["jiancheng", "yuanji"],
+  linhu: () => S.jingde ? ["yuanji", "jingde"] : ["yuanji"], haichi: ["gaozu"],
+  end_history: ["gaozu", "jingde"], end_luoyang: ["shimin"], end_kunming: ["jiancheng"], end_linhu: ["yuanji"], end_gate: ["shimin"],
+  end_closed: ["jiancheng"], end_rebel: ["shimin"], end_hesitate: ["shimin"], end_sick: ["shimin"], end_haichi: ["gaozu"],
+  ev_silk: ["shimin"], ev_revolt: ["shimin"], ev_plague: ["shimin"], ev_horse: ["shimin"], ev_hunt: ["yuanji"], ev_drought: ["shimin"]
+};
+const charSrc = k => `assets/char_${k}.png`;
+Object.keys(CHAR).forEach(k => { const im = new Image(); im.src = charSrc(k); });
+
+/* 문단 배열 → 한 줄씩 넘기는 대사 목록 */
+function toLines(arr, cast, mono) {
+  return arr.map(t => typeof t === "string" ? { text: t, chars: cast, name: mono ? "이세민" : "", mono }
+    : t.note ? { text: t.note, chars: cast, note: true }
+    : { text: t.line, name: t.who, chars: WHO[t.who] ?? cast });
+}
+function srcBox(src) {
+  if (!src) return "";
+  return `<div class="srcpop" hidden><div class="han" lang="zh-Hant">${esc(src[1])}</div><div class="pg">${esc(src[0])} · 《자치통감》 권191, ${esc(src[2])}</div></div>`;
+}
+
+/* ---------- 미연시 화면 ---------- */
+let vn = null;   // { lines, i, done, typing, timer }
+const slow = () => window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+
+function frame(id) {
+  const n = N[id];
+  $("stage").innerHTML = `<div class="vn${n.ev ? " ev" : ""}" id="vn">
+    <img class="bg" src="${artSrc(ART[id] || shown)}" alt="">
+    <div class="place"><span>${esc(n.date || n.tag || "")}${n.place ? " · " + esc(n.place) : ""}</span><b>${esc(n.title)}</b>${n.src ? `<button class="ghost srcbtn" id="srcbtn" type="button">사료 ${esc(n.src[0])}</button>` : ""}</div>
+    ${srcBox(n.src)}
+    <div class="sprites" id="sprites"></div>
+    <div class="box" id="box"><div class="name" id="name" hidden></div><div class="line" id="line"></div><div class="more" id="more">▼</div></div>
+    <div class="menu" id="menu" hidden></div>
+  </div>`;
+  shown = ART[id] || shown;
+  $("vn").onclick = e => { if (!e.target.closest("button, .menu, .srcpop")) advance(); };
+  if (n.src) $("srcbtn").onclick = () => { const p = $("stage").querySelector(".srcpop"); p.hidden = !p.hidden; };
+}
+function setSprites(chars) {
+  const el = $("sprites"), key = chars.join(",");
+  if (el.dataset.k === key) return;
+  el.dataset.k = key;
+  el.innerHTML = chars.map((k, i) => `<img class="sprite${chars.length > 1 ? (i ? " r" : " l") : ""}" src="${charSrc(k)}" alt="${esc(CHAR[k])}">`).join("");
+}
+function play(lines, done, extra = "") {
+  clearInterval(vn?.timer);
+  vn = { lines, i: 0, done, extra };
+  $("menu").hidden = true;
+  show();
+}
+function show() {
+  const L = vn.lines[vn.i];
+  setSprites(L.chars || []);
+  const nm = $("name");
+  nm.hidden = !L.name; nm.textContent = L.name || "";
+  const line = $("line");
+  line.className = "line" + (L.note ? " note" : "") + (L.mono ? " mono" : "");
+  const last = vn.i === vn.lines.length - 1;
+  const tail = last && vn.extra ? vn.extra : "";
+  $("more").hidden = true;
+  if (slow()) { line.innerHTML = esc(L.text) + tail; vn.typing = false; $("more").hidden = false; return; }
+  let k = 0; vn.typing = true;
+  line.textContent = "";
+  vn.timer = setInterval(() => {
+    k += 2; line.textContent = L.text.slice(0, k);
+    if (k >= L.text.length) finish();
+  }, 28);
+  function finish() { clearInterval(vn.timer); vn.typing = false; line.innerHTML = esc(L.text) + tail; $("more").hidden = false; }
+  vn.finish = finish;
+}
+function advance() {
+  if (!vn || !$("vn") || !$("menu").hidden) return;
+  if (vn.typing) return vn.finish();
+  if (vn.i < vn.lines.length - 1) { vn.i++; show(); }
+  else { const f = vn.done; vn.done = null; f && f(); }
+}
+document.addEventListener("keydown", e => {
+  if ((e.key === " " || e.key === "Enter") && $("vn") && e.target.tagName !== "BUTTON") { e.preventDefault(); advance(); }
+});
+function openMenu(html) {
+  $("more").hidden = true;
+  const m = $("menu"); m.innerHTML = `<div class="menu-in">${html}</div>`; m.hidden = false;
+  return m;
+}
+
+function render(id, d = {}) {
+  cur = id;
+  const n = N[id];
+  paintHud(d);
+  frame(id);
+  const cast = val(CAST[id]) || [];
+  if (n.end) {
+    saveGot(id);
+    play(toLines(n.text, cast), () => {
+      openMenu(`<div class="endcard"><span class="kind ${n.kind}">${esc(n.tag)}</span><h2>${esc(n.title)}</h2>
+        <div class="fact"><b>실제로는</b> ${esc(n.fact)}</div>
+        <div class="note">관련 사료: ${esc(n.refs)} · 모은 엔딩 ${loadGot().length} / ${ENDS.length}</div></div>
+        <button class="choice next" id="again" type="button">처음부터 다시</button>`);
+      $("again").onclick = restart;
+    });
+    return;
+  }
+  play(toLines(val(n.text), cast, n.mono), () => {
+    const m = openMenu(n.choices.map((c, i) => {
+      const need = Object.entries(c.need || {});
+      const poor = need.some(([k, v]) => S[k] < v);
+      const sub = [need.map(([k, v]) => `${NAME[k]} ${v} 필요`).join(" · ") + (poor ? " · 부족" : ""), c.sub || ""].filter(Boolean).join(" · ");
+      const cost = typeof c.eff === "function" ? `<span class="delta fate">결과는 하늘에 달렸다</span>`
+        : STATS.filter(k => c.eff?.[k]).map(k => `<span class="delta ${c.eff[k] > 0 ? "up" : "down"}">${NAME[k]} ${c.eff[k] > 0 ? "+" : ""}${c.eff[k]}</span>`).join("");
+      return `<button class="choice${c.next ? " next" : ""}" data-i="${i}" type="button"${poor ? " disabled" : ""}>${esc(c.label)}${sub ? `<small>${esc(sub)}</small>` : ""}${cost ? `<span class="cost">${cost}</span>` : ""}</button>`;
+    }).join(""));
+    m.querySelectorAll("[data-i]").forEach(b => b.onclick = () => pick(n.choices[+b.dataset.i]));
+  });
+}
+
+function pick(c) {
+  const d = {};
+  const res = val(c.res);           // 결과 문단은 수치 변경 전 상태로 판단
+  let go = val(c.go);
+  const eff = val(c.eff) || {};
+  for (const k in eff) { const before = S[k]; S[k] = clamp(S[k] + eff[k]); d[k] = S[k] - before; }
+  Object.assign(S, c.set || {});
+  if (S.hp <= 0) go = "end_sick";
+  else go = maybeEvent(go);
+  if (!res) return render(go, d);
+  const from = cur;
+  cur = go;
+  paintHud(d);
+  play(toLines(res, val(CAST[from]) || []), () => render(go), change(d));
+}
+
+const NAME = { hp: "체력", gold: "재정", army: "군사력", fame: "명망" };
+function change(d) {
+  const t = STATS.filter(k => d[k]).map(k => `<span class="delta ${d[k] > 0 ? "up" : "down"}">${NAME[k]} ${d[k] > 0 ? "+" : ""}${d[k]}</span>`);
+  return t.length ? `<div class="changes">${t.join("")}</div>` : "";
+}
+function maybeEvent(go) {
+  if (N[cur]?.ev || !EV_SLOTS.includes(go) || S.evs >= EV_MAX || Math.random() > 0.6) return go;
+  const left = Object.keys(EV).filter(k => !S.seen.includes(k));
+  if (!left.length) return go;
+  const k = left[Math.floor(Math.random() * left.length)];
+  S.evs++; S.seen.push(k); pending = go;
+  return k;
+}
+
+function book() {
+  const got = new Set(loadGot());
+  $("stage").innerHTML = `<article class="scene">${art("title")}<div class="inner"><h2>엔딩 도감</h2>
+    <p class="note">${got.size} / ${ENDS.length} · 이 브라우저에만 기록됩니다.</p>
+    <div class="book">${ENDS.map(k => got.has(k)
+      ? `<div class="got"><b>${esc(N[k].title)}</b><br><span class="note">${esc(N[k].tag)}</span></div>`
+      : `<div class="no">？？？<br><span class="note">${esc(N[k].tag)}</span></div>`).join("")}</div>
+  </div></article>
+  <div class="choices" style="margin-top:12px"><button class="choice next" id="back" type="button">돌아가기</button></div>`;
+  $("back").onclick = () => cur === "cover" ? cover() : render(cur);
+}
+
+function cover() {
+  reset(); cur = "cover";
+  const got = loadGot().length;
+  paintHud();
+  $("stage").innerHTML = `<article class="scene cover"><div class="art"><img src="${artSrc("title")}" alt=""><div class="mast"><div class="han" lang="zh-Hant">天命</div><div class="ko">천명 · 현무문 626</div></div></div><div class="inner">
+    <div class="eyebrow"><span>무덕 9년(626)</span><span>당 · 장안</span></div>
+    <p class="lede">618년, 이연(고조)이 수나라를 무너뜨리고 당을 세웠다. 전장에서 군웅을 하나씩 꺾은 것은 둘째 아들 진왕 이세민이었다. 그러나 황태자는 맏아들 건성이고, 넷째 원길은 형의 편에 섰다.</p>
+    <p>옛사람들은 하늘이 천하를 맡길 사람을 정한다고 믿었다. 그것을 천명(天命)이라 불렀다. 그렇다면 공은 한 사람에게 쌓였는데 자리가 다른 사람에게 있을 때, 하늘의 뜻은 어디에 있는가.</p>
+    <p> 무덕 9년 봄, 장안의 두 궁전 사이에 흐르는 공기가 날로 차가워진다. 당신은 이세민이다. 6월 4일 새벽 현무문에 이르기까지, 무엇을 고르겠는가.</p>
+    <h3>등장인물</h3>
+    <div class="cast">
+      <div><b>이세민 · 진왕</b>당신. 서궁에 머문다. 공은 가장 크지만 후계자는 아니다.</div>
+      <div><b>이연 · 고조</b>아버지이자 황제. 세 아들 사이에서 결단을 미룬다.</div>
+      <div><b>이건성 · 황태자</b>맏형. 동궁의 주인. 아우의 공이 두렵다.</div>
+      <div><b>이원길 · 제왕</b>아우. 건성 편에 서서 세민을 없애자고 재촉한다.</div>
+    </div>
+    <h3>하는 법</h3>
+    <ul class="how">
+      <li>거의 모든 선택에는 대가가 따른다. <b>체력</b>이 0이 되면 쓰러지고, <b>재정</b>이나 <b>명망</b>이 모자라면 고를 수 없는 선택지가 있다.</li>
+      <li><b>명망</b>이 가장 중요하다. 아버지와 조정을 설득하고, 경덕을 살리고, 현무문의 군사를 움직이는 데 모두 명망이 쓰인다. 명망은 쓰면 줄어든다.</li>
+      <li>중간에 <b>돌발 사건</b>이 끼어든다. 빨간 표시가 붙은 사건은 사료에 없는 가상의 일이다.</li>
+      <li>장면마다 '사료 보기'를 열면 《자치통감》 원문과 쪽수가 나온다. 결말은 ${ENDS.length}개, 지금까지 ${got}개를 모았다.</li>
+    </ul>
+  </div></article>
+  <div class="choices" style="margin-top:12px"><button class="choice start" id="go" type="button">시작하기</button></div>`;
+  $("go").onclick = () => { render("mono1"); window.scrollTo({ top: 0 }); };
+}
+function restart() { cover(); window.scrollTo({ top: 0 }); }
+$("btn-restart").onclick = restart;
+$("btn-book").onclick = book;
+
+function start(data) {
+  if (data && data.S && data.cur && N[data.cur] && "hp" in data.S) { S = data.S; pending = data.pending || null; render(data.cur); }
+  else restart();
+}
+window.claude?.hot?.snapshot?.(() => ({ S, cur, pending }));
+window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
+</script>
+
+</body>
+</html>
