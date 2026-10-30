@@ -160,6 +160,33 @@ footer { font-size: .76rem; color: var(--dim); text-align: center; }
   .line { font-size: .96rem; }
 }
 @media (prefers-reduced-motion: reduce) { .sprite, .vn { animation: none; } .more { animation: none; } }
+
+/* ---------- 전체 화면 (게임 진행 중) ---------- */
+body.playing { padding: 0; overflow: hidden; background: #050a09; }
+body.playing .wrap { max-width: none; display: block; }
+body.playing footer, body.playing .logo { display: none; }
+body.playing .vn { position: fixed; inset: 0; height: 100vh; height: 100dvh; border: 0; border-radius: 0; animation: none; }
+body.playing header { position: fixed; z-index: 10; top: 12px; right: 14px; }
+body.playing .hud { position: fixed; z-index: 10; top: 12px; left: 14px; width: min(560px, 58vw); padding: 8px 14px; background: rgba(9,20,18,.72); border: 1px solid rgba(212,155,60,.25); border-radius: 6px; -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
+body.playing .ghost { background: rgba(9,20,18,.72); }
+body.playing .place { top: 74px; left: 18px; right: 18px; font-size: .85rem; }
+body.playing .place b { font-size: 1.1rem; }
+body.playing .srcpop { top: 104px; max-width: 760px; }
+body.playing .sprite { height: 86%; }
+body.playing .box { left: 50%; right: auto; width: min(1080px, calc(100% - 32px)); transform: translateX(-50%); bottom: 20px; min-height: 0; height: 26%; max-height: none; padding: 18px 26px 28px; }
+body.playing .line { font-size: 1.12rem; }
+body.playing .menu { padding-top: 96px; }
+body.playing .menu-in { max-width: 760px; margin: auto; }
+@media (max-width: 640px) {
+  body.playing header { top: 8px; right: 8px; }
+  body.playing .hud { top: 46px; left: 8px; right: 8px; width: auto; padding: 6px 10px; }
+  body.playing .place { top: 132px; left: 12px; right: 12px; }
+  body.playing .srcpop { top: 160px; }
+  body.playing .sprite { height: 70%; bottom: 16%; }
+  body.playing .box { width: calc(100% - 16px); bottom: 8px; height: 34%; padding: 14px 16px 24px; }
+  body.playing .line { font-size: 1rem; }
+  body.playing .menu { padding-top: 150px; }
+}
 </style>
 <meta name="description" content="천명(天命) — 《자치통감》 현무문의 변(626)을 바탕으로 한 미연시 선택지 게임">
 </head>
@@ -613,6 +640,7 @@ const slow = () => window.matchMedia?.("(prefers-reduced-motion: reduce)").match
 
 function frame(id) {
   const n = N[id];
+  document.body.classList.add("playing");
   $("stage").innerHTML = `<div class="vn${n.ev ? " ev" : ""}" id="vn">
     <img class="bg" src="${artSrc(ART[id] || shown)}" alt="">
     <div class="place"><span>${esc(n.date || n.tag || "")}${n.place ? " · " + esc(n.place) : ""}</span><b>${esc(n.title)}</b>${n.src ? `<button class="ghost srcbtn" id="srcbtn" type="button">사료 ${esc(n.src[0])}</button>` : ""}</div>
@@ -733,6 +761,7 @@ function maybeEvent(go) {
 }
 
 function book() {
+  document.body.classList.remove("playing");
   const got = new Set(loadGot());
   $("stage").innerHTML = `<article class="scene">${art("title")}<div class="inner"><h2>엔딩 도감</h2>
     <p class="note">${got.size} / ${ENDS.length} · 이 브라우저에만 기록됩니다.</p>
@@ -745,6 +774,7 @@ function book() {
 }
 
 function cover() {
+  document.body.classList.remove("playing");
   reset(); cur = "cover";
   const got = loadGot().length;
   paintHud();
